@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo da Forca</title>
+    <!-- Importando uma fonte mais bonita do Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Estilos CSS - Design Modernizado */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #4ca1af 100%); /* Gradiente de fundo */
+            color: #ecf0f1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 10px;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        .game-container {
+            background-color: rgba(52, 73, 94, 0.95); /* Fundo semi-transparente */
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
+            max-width: 800px;
+            width: 90%;
+        }
+
+        canvas {
+            background-color: #ecf0f1;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: none;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+            max-width: 100%;
+            height: auto;
+        }
+
+        .word-display {
+            font-family: 'Courier New', monospace;
+            font-size: 3rem;
+            font-weight: bold;
+            letter-spacing: 5px;
+            color: #fff;
+            margin: 20px 0;
+            min-height: 50px;
+            word-wrap: break-word;
+        }
+
+        .message {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            height: 30px;
+            color: #f1c40f;
+        }
+
+        .keyboard {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 20px;
+        }
+
+        .key {
+            background-color: #ecf0f1;
+            color: #2c3e50;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 18px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 0 #bdc3c7; /* Efeito 3D */
+        }
+
+        .key:hover:not(:disabled) {
+            background-color: #bdc3c7;
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #95a5a6;
+        }
+
+        .key:disabled {
+            background-color: #95a5a6;
+            color: #7f8c8d;
+            cursor: not-allowed;
+            opacity: 0.7;
+            box-shadow: none;
+            transform: translateY(4px);
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .btn-reset {
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn-reset:hover {
+            background-color: #219150;
+        }
+
+        .info-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+        }
+
+        .stats, .chances {
+            font-size: 0.9rem;
+            color: #ecf0f1;
+        }
+
+        .chances span {
+            font-weight: bold;
+            color: #e74c3c;
+            font-size: 1.1rem;
+        }
+
+        select {
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            background-color: #556b82;
+            color: white;
+            font-size: 1rem;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+        }
+
+        /* Responsividade para telas menores (Celulares) */
+        @media (max-width: 600px) {
+            .word-display {
+                font-size: 1.8rem;
+                letter-spacing: 5px;
+            }
+            
+            .key {
+                padding: 8px 10px;
+                font-size: 0.9rem;
+            }
+
+            .controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <h1>Jogo da Forca</h1>
+        
+        <div class="controls">
+            <div class="info-panel">
+                <div class="stats">Vitórias: <span id="vitorias">0</span> | Derrotas: <span id="derrotas">0</span></div>
+                <div class="chances">Tentativas Restantes: <span id="tentativasRestantes">6</span></div>
+            </div>
+            
+            <div>
+                <select id="dificuldadeSelector" onchange="mudarDificuldade()">
+                    <option value="facil">Fácil (8 erros)</option>
+                    <option value="normal" selected>Normal (6 erros)</option>
+                    <option value="dificil">Difícil (4 erros)</option>
+                </select>
+                <button class="btn-reset" onclick="iniciarJogo()">Novo Jogo</button>
+            </div>
+        </div>
+
+        <canvas id="forcaCanvas" width="300" height="250"></canvas>
+
+        <div id="palavra" class="word-display">_ _ _ _</div>
+        <div id="mensagem" class="message"></div>
+
+        <div id="teclado" class="keyboard">
+            <!-- Botões gerados via JS -->
+        </div>
+    </div>
+
+    <script>
+        // Lógica JavaScript
+        let bancoPalavras = {
+            facil: [],
+            normal: [],
+            dificil: []
+        };
+        
+        let palavraSecreta = "";
+        let letrasDescobertas = [];
+        let erros = 0;
+        let maxErros = 6;
+        let jogoAcabou = false;
+        let vitorias = 0;
+        let derrotas = 0;
+        let dificuldadeAtual = "normal";
+
+        const canvas = document.getElementById('forcaCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Função para carregar os arquivos de texto
+        async function carregarPalavrasDoArquivo() {
+            const niveis = ['facil', 'normal', 'dificil'];
+            
+            for (let nivel of niveis) {
+                try {
+                    const response = await fetch(`${nivel}.txt`);
+                    if (response.ok) {
+                        const texto = await response.text();
+                        // Separa por quebra de linha e remove espaços vazios
+                        bancoPalavras[nivel] = texto.split('\n')
+                            .map(p => p.trim().toUpperCase())
+                            .filter(p => p.length > 0);
+                    } else {
+                        console.warn(`Arquivo ${nivel}.txt não encontrado.`);
+                    }
+                } catch (error) {
+                    console.error(`Erro ao carregar ${nivel}.txt:`, error);
+                }
+            }
+
+            // Fallback caso não consiga carregar (ex: sem servidor local)
+            if (bancoPalavras.normal.length === 0) {
+                bancoPalavras.normal = ["JAVASCRIPT", "HTML", "CSS", "WEB"];
+                document.getElementById('mensagem').textContent = "Aviso: Rodando sem servidor local. Palavras padrão carregadas.";
+            }
+
+            iniciarJogo();
+        }
+
+        function escolherPalavra() {
+            const lista = bancoPalavras[dificuldadeAtual];
+            if (lista && lista.length > 0) {
+                return lista[Math.floor(Math.random() * lista.length)];
+            }
+            return "ERRO";
+        }
+
+        function desenharForcaBase() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = "#2c3e50"; // Cor do desenho
+
+            // Base
+            ctx.beginPath();
+            ctx.moveTo(50, 240);
+            ctx.lineTo(250, 240);
+            ctx.stroke();
+
+            // Poste vertical
+            ctx.beginPath();
+            ctx.moveTo(100, 240);
+            ctx.lineTo(100, 50);
+            ctx.stroke();
+
+            // Trave superior
+            ctx.beginPath();
+            ctx.moveTo(100, 50);
+            ctx.lineTo(200, 50);
+            ctx.stroke();
+
+            // Corda
+            ctx.beginPath();
+            ctx.moveTo(200, 50);
+            ctx.lineTo(200, 80);
+            ctx.stroke();
+        }
+
+        function desenharBoneco(errosAtuais) {
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = "#c0392b"; // Cor do boneco (vermelho escuro)
+
+            // Lógica ajustada para desenhar proporcionalmente ao número máximo de erros
+            // Mapeia as partes do corpo baseadas na dificuldade
+            
+            // Ordem de desenho: Cabeça, Corpo, Braço E, Braço D, Perna E, Perna D
+            // Se for fácil (8 erros), adicionamos olhos/boca ou dividimos mais partes (simplificado aqui para manter a lógica visual padrão)
+            
+            // Para simplificar a visualização neste canvas, vamos desenhar as partes progressivamente
+            // Normal (6): 1=Cabeca, 2=Corpo, 3=BE, 4=BD, 5=PE, 6=PD
+            // Dificil (4): 1=Cabeca, 2=Corpo, 3=Bracos, 4=Pernas (Acelerado)
+            
+            const progresso = errosAtuais / maxErros; // 0 a 1
+
+            if (errosAtuais >= 1) { // Cabeça (sempre o primeiro erro)
+                ctx.beginPath();
+                ctx.arc(200, 100, 20, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            
+            // Lógica simplificada: desenha partes baseadas na % de erro
+            if (progresso > 0.3) { // Corpo
+                ctx.beginPath();
+                ctx.moveTo(200, 120);
+                ctx.lineTo(200, 170);
+                ctx.stroke();
+            }
+            if (progresso > 0.45) { // Braço esquerdo
+                ctx.beginPath();
+                ctx.moveTo(200, 130);
+                ctx.lineTo(170, 150);
+                ctx.stroke();
+            }
+            if (progresso > 0.6) { // Braço direito
+                ctx.beginPath();
+                ctx.moveTo(200, 130);
+                ctx.lineTo(230, 150);
+                ctx.stroke();
+            }
+            if (progresso > 0.8) { // Perna esquerda
+                ctx.beginPath();
+                ctx.moveTo(200, 170);
+                ctx.lineTo(170, 200);
+                ctx.stroke();
+            }
+            if (errosAtuais >= maxErros) { // Perna direita (Último erro)
+                ctx.beginPath();
+                ctx.moveTo(200, 170);
+                ctx.lineTo(230, 200);
+                ctx.stroke();
+            }
+        }
+
+        function atualizarInterface() {
+            document.getElementById('palavra').textContent = letrasDescobertas.join(' ');
+            document.getElementById('vitorias').textContent = vitorias;
+            document.getElementById('derrotas').textContent = derrotas;
+            document.getElementById('tentativasRestantes').textContent = maxErros - erros;
+        }
+
+        function verificarFimDeJogo() {
+            if (!letrasDescobertas.includes('_')) {
+                document.getElementById('mensagem').textContent = "PARABÉNS! Você venceu!";
+                document.getElementById('mensagem').style.color = "#2ecc71";
+                vitorias++;
+                jogoAcabou = true;
+                atualizarInterface();
+                desabilitarTeclado();
+            } else if (erros >= maxErros) {
+                document.getElementById('mensagem').textContent = `GAME OVER! A palavra era ${palavraSecreta}`;
+                document.getElementById('mensagem').style.color = "#e74c3c";
+                derrotas++;
+                jogoAcabou = true;
+                atualizarInterface();
+                desabilitarTeclado();
+            }
+        }
+
+        function processarChute(letra, btnElement) {
+            if (jogoAcabou) return;
+
+            btnElement.disabled = true;
+
+            if (palavraSecreta.includes(letra)) {
+                for (let i = 0; i < palavraSecreta.length; i++) {
+                    if (palavraSecreta[i] === letra) {
+                        letrasDescobertas[i] = letra;
+                    }
+                }
+            } else {
+                erros++;
+                desenharBoneco(erros);
+            }
+
+            atualizarInterface();
+            verificarFimDeJogo();
+        }
+
+        function criarTeclado() {
+            const tecladoDiv = document.getElementById('teclado');
+            tecladoDiv.innerHTML = '';
+            const alfabeto = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            
+            for (let letra of alfabeto) {
+                const btn = document.createElement('button');
+                btn.textContent = letra;
+                btn.classList.add('key');
+                btn.onclick = () => processarChute(letra, btn);
+                tecladoDiv.appendChild(btn);
+            }
+        }
+
+        function desabilitarTeclado() {
+            const botoes = document.querySelectorAll('.key');
+            botoes.forEach(btn => btn.disabled = true);
+        }
+
+        function mudarDificuldade() {
+            const selector = document.getElementById('dificuldadeSelector');
+            dificuldadeAtual = selector.value;
+            
+            if (dificuldadeAtual === 'facil') {
+                maxErros = 8;
+            } else if (dificuldadeAtual === 'normal') {
+                maxErros = 6;
+            } else if (dificuldadeAtual === 'dificil') {
+                maxErros = 4;
+            }
+            // Atualiza o texto de tentativas imediatamente ao mudar a dificuldade
+            document.getElementById('tentativasRestantes').textContent = maxErros;
+            iniciarJogo();
+        }
+
+        function iniciarJogo() {
+            palavraSecreta = escolherPalavra();
+            letrasDescobertas = Array(palavraSecreta.length).fill('_');
+            erros = 0;
+            jogoAcabou = false;
+            
+            document.getElementById('mensagem').textContent = "";
+            
+            desenharForcaBase();
+            criarTeclado();
+            atualizarInterface();
+        }
+
+        // Iniciar o jogo ao carregar a página
+        window.onload = carregarPalavrasDoArquivo;
+
+    </script>
+</body>
+</html>
